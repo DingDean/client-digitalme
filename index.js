@@ -19,8 +19,7 @@ host = host || "localhost"
 port = port || 8764
 eport = eport || 8763
 
-relay.remoteConnect( host, port );
-
+let sender = relay( `tcp://${host}:${port}` )
 editorListener.listen( eport, msg => {
   if (!msg)
     return
@@ -32,8 +31,5 @@ editorListener.listen( eport, msg => {
   } catch (e) {
     debug('收到无效的编辑器消息')
   }
-  let sender = relay.getGate()
-  if ( sender )
-    handle( sender, message )
-  // TODO: add a queue for messages
+  sender.send( JSON.stringify( message ) )
 })
