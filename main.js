@@ -21,7 +21,8 @@ const Editor = net.createServer( c => {
     }
     if ( connected )
       handle( Gate, message )
-      //Gate.write(JSON.stringify(message))
+    else
+      remoteConnect()
   })
   c.on('close', () => {
     debug("a vim instance closed")
