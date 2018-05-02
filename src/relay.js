@@ -8,6 +8,7 @@ module.exports = function ( path ) {
     debug("Received reply: [", reply.toString(), "]")
   })
 
-  requester.connect( "tcp://localhost:5555" )
+  debug('Connectiong to remote server: ' + path)
+  requester.connect( path )
   return requester;
 }
