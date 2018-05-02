@@ -5,7 +5,7 @@
   "preferGlobal": true,
   "main": "index.js",
   "scripts": {
-    "dev": "DEBUG=digitme node main.js"
+    "dev": "DEBUG=digitme node index.js"
   },
   "bin": {
     "client-digitme": "./index.js"
