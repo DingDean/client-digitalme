@@ -1,16 +1,20 @@
 {
   "name": "client_digitalme",
   "version": "1.0.0",
-  "description": "",
+  "description": "Relay Server for DigitalMe",
+  "preferGlobal": true,
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "DEBUG=digitme node main.js"
   },
+  "bin": {
+    "client-digitme": "./index.js"
+  },
   "keywords": [],
-  "author": "",
+  "author": "Ke Ding <me@dingkewz.com> [dingkewz.com]",
   "license": "ISC",
   "dependencies": {
+    "commander": "^2.15.1",
     "debug": "^3.1.0",
     "dotenv": "^5.0.1"
   }
