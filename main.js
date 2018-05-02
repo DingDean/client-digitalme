@@ -21,8 +21,6 @@ const Editor = net.createServer( c => {
     }
     if ( connected )
       handle( Gate, message )
-    else
-      remoteConnect()
   })
   c.on('close', () => {
     debug("a vim instance closed")
@@ -39,6 +37,8 @@ Editor.listen(process.env.EDITOR_PORT, () => {
 })
 
 function remoteConnect () {
+  if ( connected )
+    return;
   let socket = net.createConnection(
     {host: process.env.REMOTE_HOST, port: process.env.REMOTE_PORT}
   )
@@ -58,11 +58,12 @@ function onError ( ) {
   debug('Remote Server Unaccessable, retry...')
   connected = false;
   this.destroy()
-  setTimeout( remoteConnect, process.env.RETRY_TIMEOUT | 60000 )
+  setTimeout( remoteConnect, process.env.RETRY_TIMEOUT || 60000 )
 }
 
 function onEnd ( ) {
   debug("Close the gateway")
   connected = false;
   this.destroy()
+  setTimeout( remoteConnect, process.env.RETRY_TIMEOUT || 60000 )
 }
