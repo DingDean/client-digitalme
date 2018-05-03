@@ -31,8 +31,8 @@ editorListener.listen( eport, msg => {
   } catch (e) {
     debug('收到无效的编辑器消息')
   }
-  sender.send( JSON.stringify( message ), err => {
-    debug("Failed to relay" + err)
+  sender.send( JSON.stringify( message ), 0, err => {
+    if (err) debug("Failed to relay" + err)
   } )
 })
 
