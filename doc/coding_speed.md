@@ -27,3 +27,19 @@ For the time interval, there must be the start and the end:
 For the concept of 'displacement', I would use the number of 'ping'
 event received during a single context. Other metric should be consider
  as well, the number of line added, the number of characters entered.
+
+When [buff entered]
+  end the current session
+  create a new session with entered buff info
+  wait for ping event
+
+When [ping]
+  check if current session is expired
+  if true, create a new session with current buff info
+  else, update the current session
+
+When [buff leave]
+  check 1to1 relationship against the current session by verify buff
+  info
+  if true, then close the session
+  else, it's a bug to be resolved.
