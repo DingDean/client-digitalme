@@ -22,7 +22,7 @@ Session.new = function (fn, ft) {
 
   let index = ++Session.index
   let session = new Session(fn, ft, index)
-  debug('A new session is created: ' + JSON.stringify(session))
+  debug('Created: ' + JSON.stringify(session))
   return session
 }
 Session.stash = function ( session ) {
@@ -30,7 +30,7 @@ Session.stash = function ( session ) {
     return
   if ( !session.isClosed() )
     session.close()
-  debug('A session is stashed: ' + JSON.stringify(session))
+  debug('Stashed: ' + JSON.stringify(session))
   Session.history.push( session )
 }
 Session.history = []
