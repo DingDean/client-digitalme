@@ -7,24 +7,29 @@ const Session = function (filename, filetype, index) {
   this.end        = null
   this.lastTick   = Date.now()
   this.ticks      = 0
+  this.marked     = false
 }
 module.exports = Session
 
 Session.current = null
 Session.IDLE_TIMEOUT = 60000
-Session.new = function (fn, ft, index) {
-  if (fn == undefined || ft == undefined || index == undefined)
-    throw(new Error('Session.new expects three arguments'))
+Session.index = 0
+Session.new = function (fn, ft) {
+  if (fn == undefined || ft == undefined)
+    throw(new Error('Session.new expects two arguments'))
   if ( typeof fn != 'string' || typeof ft != 'string' )
     throw(new Error('Session.new expects string arguments'))
 
-  let session = new Session(fn, ft)
+  let index = ++Session.index
+  let session = new Session(fn, ft, index)
   debug('A new session is created: ' + JSON.stringify(session))
   return session
 }
 Session.stash = function ( session ) {
   if ( !session.validate() )
     return
+  if ( !session.isClosed() )
+    session.close()
   debug('A session is stashed: ' + JSON.stringify(session))
   Session.history.push( session )
 }
@@ -44,19 +49,13 @@ Session.prototype.beat = function () {
   this.ticks++
 }
 
-Session.prototype.close = function () {
+Session.prototype.close = function ( info ) {
+  if ( this.marked ){
+    info = info ? info : {filename: 'unknown', filetype: 'unknow'}
+    this.filename = info.filename
+    this.filetype = info.filetype
+  }
   this.end = Date.now()
-}
-
-Session.prototype.analyze = function () {
-  if ( !this.isClosed() )
-    return null
-  let elapsed = this.end - this.lastTick
-
-  let interval = Math.floor(elapsed / 1000) // convert to seconds
-  let speed = this.ticks / interval
-
-  return {speed, elapsed}
 }
 
 Session.prototype.validate = function () {
