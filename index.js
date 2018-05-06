@@ -2,7 +2,6 @@
 
 const relay = require('./src/relay.js')
 const Session = require('./src/session.js')
-//const handle = require('./src/handler.js')
 const program = require('commander')
 const debug = require('debug')('digitme')
 const net = require('net')
@@ -103,3 +102,8 @@ process.on('SIGINT', () => {
   sender.close()
   process.exit()
 })
+
+setInterval(() => {
+  let history = Session.history
+    .filter( e => e.validate())
+}, 18000000)
