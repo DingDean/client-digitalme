@@ -12,15 +12,14 @@ module.exports = function ( path ) {
   requester.on('connect', () => {
     debug('Connected to remote server: ' + path)
     requester.__alive = true
+    requester.emit('flush_history')
   })
 
   requester.on('close', () => {
-    debug('Socket is closed')
     requester.__alive = false
   })
 
   requester.on('disconnect', () => {
-    debug('Socket is disconnected')
     requester.__alive = false
   })
 
