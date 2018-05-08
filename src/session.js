@@ -61,7 +61,7 @@ Session.prototype.close = function ( info ) {
 Session.prototype.validate = function () {
   if ( this.ticks == 0 )
     return false
-  let regx = /NERD_TREE*/
+  let regx = /NERD_tree*/
   let isNerd = regx.test( this.filename )
   if ( isNerd )
     return false
