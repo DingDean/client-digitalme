@@ -5,6 +5,22 @@ const Session = require('./src/session.js')
 const program = require('commander')
 const debug = require('debug')('digitme')
 const net = require('net')
+const fs = require('fs')
+const os = require('os')
+const path = require('path')
+const TEMP_DIR = path.resolve( os.homedir(), '.digitalme' )
+
+try {
+  fs.readdirSync( TEMP_DIR )
+  debug('TEMP DIR exists, safe to go')
+} catch (e) {
+  try {
+    fs.mkdirSync( TEMP_DIR )
+    debug('TEMP DIR is created')
+  } catch (e) {
+    throw(e)
+  }
+}
 
 program
   .description( 'cli tool for digitalme' )
@@ -20,6 +36,25 @@ port = port || 8764
 eport = eport || 8763
 
 let sender = relay( `tcp://${host}:${port}` )
+sender.on('flush_history', () => {
+  fs.readdir( TEMP_DIR, (err, files) => {
+    if (err)
+      return debug('Failed to open temp dir')
+    for (let name of files) {
+      name = path.resolve( TEMP_DIR, name )
+      fs.readFile( name, 'utf8', (err, buff) =>{
+        if ( !err ) {
+          sender.send( buff )
+          debug('A local history is sync to remote')
+          fs.unlink( name, err => {
+            if (err)
+              debug(`Error on deleting temp file ${name}`)
+          })
+        }
+      })
+    }
+  })
+})
 
 const editorListener = net.createServer( c => {
   c.setEncoding( 'utf8' )
@@ -65,7 +100,10 @@ editorListener.on('ping', ( ts, data ) => {
     Session.current = s
     debug(`A marked session is created with index ${s.index}`)
   }
-  // TODO: sender
+  if ( sender.isAlive() ) {
+    let msg = JSON.stringify({event: 'digit_ping'})
+    sender.send( msg )
+  }
 })
 
 editorListener.on('bufEnter', ( ts, data ) => {
@@ -104,6 +142,27 @@ process.on('SIGINT', () => {
 })
 
 setInterval(() => {
+  // TODO: 2018-05-06
+  // gzip the history
   let history = Session.history
     .filter( e => e.validate())
-}, 18000000)
+  if ( history.length == 0 )
+    return
+  history = JSON.stringify(history)
+  Session.history = []
+
+  let msg = {event: 'digit_session', data: {ts: Date.now(), history}}
+  msg = JSON.stringify(msg)
+
+  if ( sender.isAlive() ) {
+    sender.send( msg )
+    debug('History is synced to remote server')
+  } else {
+    let fp = path.resolve( TEMP_DIR, `./${Date.now()}_tmp` )
+    fs.writeFile(fp, msg, err => {
+      if ( err )
+        return debug('Failed to save history locally: ' + err)
+      debug('History is saved locally')
+    })
+  }
+}, 30000)
