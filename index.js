@@ -148,7 +148,6 @@ setInterval(() => {
     .filter( e => e.validate())
   if ( history.length == 0 )
     return
-  history = JSON.stringify(history)
   Session.history = []
 
   let msg = {event: 'digit_session', data: {ts: Date.now(), history}}
