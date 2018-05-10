@@ -3,17 +3,24 @@ const zmq = require('zeromq')
 
 module.exports = function ( path ) {
   const requester = zmq.socket('push')
+  requester.__alive = false
+
+  requester.isAlive = function () {
+    return requester.__alive
+  }
 
   requester.on('connect', () => {
     debug('Connected to remote server: ' + path)
+    requester.__alive = true
+    requester.emit('flush_history')
   })
 
   requester.on('close', () => {
-    debug('Socket is closed')
+    requester.__alive = false
   })
 
   requester.on('disconnect', () => {
-    debug('Socket is disconnected')
+    requester.__alive = false
   })
 
   requester.on('accept_error', err => {
