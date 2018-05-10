@@ -67,5 +67,7 @@ Session.prototype.validate = function () {
     return false
   if ( this.filename === '' )
     return false
+  if ( this.filetype === '' )
+    return false
   return true
 }

@@ -18,9 +18,11 @@ function inValidSession () {
   let b = Session.new('NERD_TREE', '', 1)
   b.beat()
   let c = Session.new('a', 'js', 1)
+  let d = Session.new('a', '', 1)
+  d.beat()
 
-  let invalids = [a, b, c]
-  return invalids[ Session.index % 3]
+  let invalids = [a, b, c, d]
+  return invalids[ Session.index % 4]
 }
 
 describe('Session', function () {
@@ -195,6 +197,14 @@ describe('Session', function () {
         let type = 'js'
         let session = Session.new( name, type, 1 )
         // no ticks
+        assert.equal( session.validate(), false )
+    })
+
+    it('should reject any session with no filetype', function () {
+        let name = 'validnmae'
+        let type = ''
+        let session = Session.new( name, type, 1 )
+        session.beat()
         assert.equal( session.validate(), false )
     })
   })
