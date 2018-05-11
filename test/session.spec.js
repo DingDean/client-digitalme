@@ -137,46 +137,6 @@ describe('Session', function () {
     })
   })
 
-  //describe('analyze', function () {
-    //it('should only analyze a closed session', function () {
-      //let session = Session.new('testfn', 'testft')
-      //let result = session.analyze()
-      //assert.deepEqual( result, null )
-    //})
-
-    //it("should return the session's coding speed", function (done) {
-      //let session = Session.new('name', 'type')
-
-      //session.beat()
-      //session.beat()
-
-      //setTimeout( () => {
-        //session.close()
-        //let {speed} = session.analyze()
-
-        //assert.equal( typeof speed, 'number' )
-        //assert.equal( speed > 0, true )
-        //done()
-      //}, 200)
-    //})
-
-    //it('should return the elapsed time of the session', function (done) {
-      //let session = Session.new('name', 'type')
-
-      //session.beat()
-      //session.beat()
-
-      //setTimeout( () => {
-        //session.close()
-        //let {elapsed} = session.analyze()
-
-        //assert.equal( typeof elapsed, 'number' )
-        //assert.equal( elapsed >= 200, true )
-        //done()
-      //}, 200)
-    //})
-  //})
-
   describe('validate', function () {
     it('should reject any session with name match /NERD_TREE*/ ', function () {
       let name = 'NERD_TREE_2'
