@@ -10,7 +10,7 @@
     "lint": "eslint ./index.js"
   },
   "bin": {
-    "client-digitme": "./bin/cli.js"
+    "digitme-cli": "./bin/cli.js"
   },
   "keywords": [],
   "author": "Ke Ding <me@dingkewz.com> [dingkewz.com]",
