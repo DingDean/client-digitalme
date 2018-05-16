@@ -92,4 +92,11 @@ program
     }
   })
 
+program
+  .command('check')
+  .action(async () => {
+    let {running} = await isRunning('dgmc')
+    console.log(running ? 1 : 0)
+  })
+
 program.parse(process.argv)
