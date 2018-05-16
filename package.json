@@ -10,7 +10,7 @@
     "lint": "eslint ./index.js"
   },
   "bin": {
-    "client-digitme": "./index.js"
+    "digitme-cli": "./bin/cli.js"
   },
   "keywords": [],
   "author": "Ke Ding <me@dingkewz.com> [dingkewz.com]",
@@ -19,6 +19,7 @@
     "commander": "^2.15.1",
     "debug": "^3.1.0",
     "dotenv": "^5.0.1",
+    "find-process": "^1.1.1",
     "mocha": "^5.1.1",
     "sinon": "^5.0.3",
     "zeromq": "^4.6.0"
