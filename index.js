@@ -107,11 +107,9 @@ editorListener.on('bufEnter', (ts, data) => {
   if (current) {
     if (current.isClosed()) {
       // do nothing
-    } else if (current.isExpired(ts)) {
+    } else {
       current.close()
       Session.stash(current)
-    } else {
-      debug('Possible bug, create new session when old one is not closed')
     }
   }
   let s = Session.new(filename, filetype)

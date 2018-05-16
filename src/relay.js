@@ -1,7 +1,7 @@
 const debug = require('debug')('digitme')
 const zmq = require('zeromq')
 
-module.exports = function ( path ) {
+module.exports = function (path) {
   const requester = zmq.socket('push')
   requester.__alive = false
 
@@ -29,12 +29,12 @@ module.exports = function ( path ) {
 
   requester.on('error', err => {
     debug('Error with zeromq' + err)
-  } )
-
-  requester.on('monitor_error', err => {
-    debug("Monitor catch error" + err)
   })
 
-  requester.connect( path ).monitor()
-  return requester;
+  requester.on('monitor_error', err => {
+    debug('Monitor catch error' + err)
+  })
+
+  requester.connect(path).monitor()
+  return requester
 }
