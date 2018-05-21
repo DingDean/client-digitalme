@@ -122,17 +122,6 @@ describe('Pomodoro', function () {
       let diff = tEnd - tStart
       assert.equal(diff, 15 * 60000)
     })
-
-    it('should rest after tWork + tRest time', function () {
-      let spy = sinon.spy(pomo, 'finish')
-      pomo.add({name: 'test', tWork: '15'})
-      pomo.start('test')
-      let {tStart, tEnd} = pomo.current
-      let {tRest} = pomo.current.timer.parseTWR()
-      let diff = tEnd - tStart
-      clock.tick(diff + tRest)
-      assert(spy.called)
-    })
   })
 
   describe('pause 暂停时钟', function () {
@@ -149,7 +138,7 @@ describe('Pomodoro', function () {
       clock.restore()
     })
 
-    it('should return err if timer of the name is not running', function () {
+    it('should return err if no timer is running', function () {
       let err = pomo.pause()
       assert.equal(err, 'nothing to pause')
     })
@@ -169,13 +158,16 @@ describe('Pomodoro', function () {
       assert.equal(err, 'timer is already paused')
     })
 
-    it('should set the tPaused of current', function () {
+    it('should not pause the current timer twice', function () {
       pomo.start('test')
       pomo.pause()
-      assert.equal(typeof pomo.current.tPaused, 'number')
+      clock.tick(300000)
+      assert.equal(pomo.current.state, TimerEnum.running)
+      let err = pomo.pause()
+      assert.equal(err, 'no second chance')
     })
 
-    it('should resume automatically in 5 minutes', function () {
+    it('should resume automatically in 5 minutes after pause', function () {
       pomo.start('test')
       let spy = sinon.spy(pomo, 'resume')
       pomo.pause()
@@ -185,35 +177,100 @@ describe('Pomodoro', function () {
   })
 
   describe('resume 恢复时钟', function () {
-    var pomo
+    var pomo, clock
     beforeEach(function () {
+      clock = sinon.useFakeTimers()
       pomo = new Pomodoro()
       pomo.add({name: 'test'})
       pomo.add({name: 'cool'})
       pomo.start('test')
+      pomo.pause()
     })
 
     afterEach(function () {
-      if (pomo.current)
-        clearTimeout(pomo.current.tid)
+      clock.restore()
     })
 
     it('should set current state to running', function () {
+      pomo.resume()
       let {state} = pomo.current
       assert.equal(state, TimerEnum.running)
     })
 
     it('should unset tPaused', function () {
+      pomo.resume()
       let {tPaused} = pomo.current
       assert.equal(tPaused, null)
     })
+
+    it('should add the actual resting time to tEnd stamp', function () {
+      pomo.start('test')
+      let {tEnd} = pomo.current
+      pomo.pause()
+      let rest = 180000 // 3m
+      clock.tick(rest)
+      pomo.resume()
+      let {tEnd: newEnd} = pomo.current
+      let diff = newEnd - tEnd
+      assert.equal(diff, rest)
+    })
   })
 
-  describe('abandon', function () {
-    // 终止时钟
+  describe('abandon 放弃时钟', function () {
+    var pomo, clock
+    beforeEach(function () {
+      clock = sinon.useFakeTimers()
+
+      pomo = new Pomodoro()
+      pomo.add({name: 'test'})
+      pomo.start('test')
+    })
+
+    afterEach(function () {
+      clock.restore()
+    })
+
+    it('should increment nAbandon of the timer by 1', function () {
+      pomo.abandon()
+      let timer = pomo.getTimer('test')
+      assert.equal(timer.nAbandon, 1)
+    })
+
+    it('should clear the current timeout', function () {
+      let spy = sinon.spy(pomo, 'finish')
+      let {tWork, tRest} = pomo.current.timer.parseTWR()
+      pomo.abandon()
+      clock.tick(tWork + tRest)
+      assert.equal(spy.called, false)
+    })
   })
 
-  describe('finish', function () {
-    // 完成时钟
+  describe('finish 完成时钟', function () {
+    var pomo, clock, spyFinish
+    beforeEach(function () {
+      clock = sinon.useFakeTimers()
+
+      pomo = new Pomodoro()
+      pomo.add({name: 'test'})
+      pomo.start('test')
+      spyFinish = sinon.spy(pomo, 'finish')
+    })
+
+    afterEach(function () {
+      clock.restore()
+    })
+
+    it('should be called after tWork time if not being paused', function () {
+      let {timer} = pomo.current
+      let {tWork} = timer.parseTWR()
+      clock.tick(tWork)
+      assert(spyFinish.called, true)
+    })
+
+    it('should increment nFinish of the timer by 1', function () {
+      clock.next() // actual work stops, and rest begin
+      let timer = pomo.getTimer('test')
+      assert.equal(timer.nFinish, 1)
+    })
   })
 })

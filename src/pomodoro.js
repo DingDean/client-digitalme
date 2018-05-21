@@ -9,7 +9,7 @@ const Timer = function ({name, tWork, tRest}) {
   this.tWork = tWork // 单次工作时长
   this.tRest = tRest // 单次休息时长
   this.nFinish = 0 // 完成的次数
-  this.nStop = 0 // 放弃的次数
+  this.nAbandon = 0 // 放弃的次数
   this.nFeel = [] // 每次完成或放弃后的感受
 }
 Timer.prototype.parseTWR = function () {
@@ -18,7 +18,8 @@ Timer.prototype.parseTWR = function () {
 
 const Pomodoro = function () {
   this.timers = [] // [Timer, ...]
-  this.current = null // {name, tid, state, tStart, tEnd, tPaused}
+  // {name, tid, state, tStart, tEnd, tPaused, hasPaused}
+  this.current = null
 }
 
 Pomodoro.prototype.add = function (config) {
@@ -51,8 +52,9 @@ Pomodoro.prototype.start = function (name) {
 }
 Pomodoro.prototype._start = function (tWork, tRest) {
   let tid = setTimeout(() => {
+    this.finish()
     setTimeout(() => {
-      this.finish()
+      this.finishRest()
     }, tRest)
   }, tWork)
   return tid
@@ -63,6 +65,8 @@ Pomodoro.prototype.pause = function () {
     return `nothing to pause`
   if (this.current.state === TimerEnum.paused)
     return 'timer is already paused'
+  if (this.current.hasPaused === true)
+    return 'no second chance'
   this.current.state = TimerEnum.paused
   this.current.tPaused = Date.now()
   clearTimeout(this.current.tid)
@@ -70,6 +74,7 @@ Pomodoro.prototype.pause = function () {
     this.resume()
   }, 300000)
   this.current.tid = tid
+  this.current.hasPaused = true
   return null
 }
 
@@ -83,13 +88,33 @@ Pomodoro.prototype.resume = function () {
   let tWork = tEnd - tPaused
   let tid = this._start(tWork, tRest)
   this.current.tid = tid
+  this.current.tEnd += Date.now() - tPaused
   this.current.state = TimerEnum.running
   this.current.tPaused = null
   return null
 }
 
-Pomodoro.prototype.finish = function () {
+Pomodoro.prototype.abandon = function () {
+  if (this.current === null)
+    return `nothing to abandon`
+  let {timer, tid} = this.current
+  clearTimeout(tid)
+  timer.nAbandon++
+  this.current = null
+  return null
+}
 
+Pomodoro.prototype.finish = function () {
+  if (this.current === null)
+    return `nothing to finish`
+  let {timer} = this.current
+  timer.nFinish++
+  this.current = null
+  return null
+}
+
+Pomodoro.prototype.getTimer = function (name) {
+  return this.timers.find(e => e.name === name)
 }
 
 module.exports = {Pomodoro, Timer, TimerEnum}
