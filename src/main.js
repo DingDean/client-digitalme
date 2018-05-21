@@ -30,7 +30,7 @@ exports.run = function (host, port, eport) {
   let sender = relay(`tcp://${host}:${port}`)
   sender.on('flush_history', () => {
     fs.readdir(TEMP_DIR, (err, files) => {
-      if (err) { return debug('Failed to open temp dir') }
+      if (err) return debug('Failed to open temp dir')
       for (let name of files) {
         name = path.resolve(TEMP_DIR, name)
         fs.readFile(name, 'utf8', (err, buff) => {
@@ -38,7 +38,7 @@ exports.run = function (host, port, eport) {
             sender.send(buff)
             debug('A local history is sync to remote')
             fs.unlink(name, err => {
-              if (err) { debug(`Error on deleting temp file ${name}`) }
+              if (err) debug(`Error on deleting temp file ${name}`)
             })
           }
         })
@@ -49,7 +49,7 @@ exports.run = function (host, port, eport) {
   const editorListener = net.createServer(c => {
     c.setEncoding('utf8')
     c.on('data', msg => {
-      if (!msg) { return }
+      if (!msg) return
       let message
       try {
         msg = JSON.parse(msg)
@@ -77,9 +77,8 @@ exports.run = function (host, port, eport) {
         let {filename, filetype} = current
         let s = Session.new(filename, filetype)
         Session.current = s
-      } else {
+      } else
         current.beat()
-      }
     } else {
       // this might happen when client is restarted
       let s = Session.new('', '')
@@ -111,9 +110,21 @@ exports.run = function (host, port, eport) {
   editorListener.on('bufLeave', (ts, data) => {
     let current = Session.current
 
-    if (!current) { return debug('Possible bug, no session when a bufleave') }
+    if (!current) return debug('Possible bug, no session when a bufleave')
     current.close(data)
     Session.stash(current)
+  })
+
+  editorListener.on('totatoStart', (ts, data) => {
+    //
+  })
+
+  editorListener.on('tomatoPause', (ts, data) => {
+    //
+  })
+
+  editorListener.on('tomotoAbandon', (ts, data) => {
+    //
   })
 
   editorListener.listen(eport, () => {
@@ -130,7 +141,7 @@ exports.run = function (host, port, eport) {
     // gzip the history
     let history = Session.history
       .filter(e => e.validate())
-    if (history.length === 0) { return }
+    if (history.length === 0) return
     Session.history = []
 
     let msg = {event: 'digit_session', data: {ts: Date.now(), history}}
@@ -142,7 +153,7 @@ exports.run = function (host, port, eport) {
     } else {
       let fp = path.resolve(TEMP_DIR, `./${Date.now()}_tmp`)
       fs.writeFile(fp, msg, err => {
-        if (err) { return debug('Failed to save history locally: ' + err) }
+        if (err) return debug('Failed to save history locally: ' + err)
         debug('History is saved locally')
       })
     }
