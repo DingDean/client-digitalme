@@ -314,4 +314,59 @@ describe('Pomodoro', function () {
       assert.equal(history.name, 'test')
     })
   })
+
+  describe('getState', function () {
+    describe('return value', function () {
+      var result
+      beforeEach(function () {
+        let pomo = new Pomodoro()
+        result = pomo.getState()
+      })
+
+      afterEach(function () {
+        result = null
+      })
+
+      let props = [
+        {name: 'state', type: 'number'},
+        {name: 'tEnd', type: 'number'}
+      ]
+
+      props.forEach(({name, type}) => {
+        it(`should have properfty ${name} `, function () {
+          assert(result.hasOwnProperty(name))
+        })
+        it(`${name} should be of type ${type}`, function () {
+          assert.equal(typeof result[name], type)
+        })
+      })
+    })
+
+    describe('when idle', function () {
+      var result
+      beforeEach(function () {
+        let pomo = new Pomodoro()
+        result = pomo.getState()
+      })
+      it('should return state as 1', function () {
+        assert.equal(result.state, 1)
+      })
+      it('should return tEnd as 0', function () {
+        assert.equal(result.tEnd, 0)
+      })
+    })
+
+    describe('when active', function () {
+      var result
+      beforeEach(function () {
+        let pomo = new Pomodoro()
+        pomo.add({name: 'test'})
+        pomo.start('test')
+        result = pomo.getState()
+      })
+      it('should return state as 0', function () {
+        assert.equal(result.state, 0)
+      })
+    })
+  })
 })
