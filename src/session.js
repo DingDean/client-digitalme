@@ -15,9 +15,12 @@ Session.current = null
 Session.IDLE_TIMEOUT = 60000
 Session.index = 0
 Session.new = function (fn, ft) {
-  if (fn === undefined || ft === undefined) { throw (new Error('Session.new expects two arguments')) }
-  if (fn === null || ft === null) { throw (new Error('Session.new expects two arguments')) }
-  if (typeof fn !== 'string' || typeof ft !== 'string') { throw (new Error('Session.new expects string arguments')) }
+  if (fn === undefined || ft === undefined)
+    throw (new Error('Session.new expects two arguments'))
+  if (fn === null || ft === null)
+    throw (new Error('Session.new expects two arguments'))
+  if (typeof fn !== 'string' || typeof ft !== 'string')
+    throw (new Error('Session.new expects string arguments'))
 
   let index = ++Session.index
   let session = new Session(fn, ft, index)
@@ -25,8 +28,8 @@ Session.new = function (fn, ft) {
   return session
 }
 Session.stash = function (session) {
-  if (!session.validate()) { return }
-  if (!session.isClosed()) { session.close() }
+  if (!session.validate()) return
+  if (!session.isClosed()) session.close()
   debug('Stashed: ' + JSON.stringify(session))
   Session.history.push(session)
 }
@@ -56,11 +59,11 @@ Session.prototype.close = function (info) {
 }
 
 Session.prototype.validate = function () {
-  if (this.ticks === 0) { return false }
+  if (this.ticks === 0) return false
   let regx = /NERD_tree*/
   let isNerd = regx.test(this.filename)
-  if (isNerd) { return false }
-  if (this.filename === '') { return false }
-  if (this.filetype === '') { return false }
+  if (isNerd) return false
+  if (this.filename === '') return false
+  if (this.filetype === '') return false
   return true
 }

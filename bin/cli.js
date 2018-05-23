@@ -58,15 +58,14 @@ program
 
     let {running} = await isRunning('dgmc')
 
-    if (running) {
+    if (running)
       console.log('client is running')
-    } else {
+    else {
       if (await portIsFree(eport)) {
         daemon(host, port, eport)
         console.log('client starts successfully')
-      } else {
+      } else
         console.log('port is busy')
-      }
     }
   })
 
@@ -74,22 +73,20 @@ program
   .command('stop')
   .action(async () => {
     let {running, list} = await isRunning('dgmc')
-    if (running) {
+    if (running)
       process.kill(list[0].pid)
-    } else {
+    else
       console.log('There is nothing to be stopped')
-    }
   })
 
 program
   .command('status')
   .action(async () => {
     let {running, list} = await isRunning('dgmc')
-    if (running) {
+    if (running)
       console.log(`Client is running with pid ${list[0].pid}`)
-    } else {
+    else
       console.log('Client is not running')
-    }
   })
 
 program

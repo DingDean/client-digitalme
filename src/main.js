@@ -1,5 +1,7 @@
 const relay = require('./relay.js')
 const Session = require('./session.js')
+const {Pomodoro} = require('./pomodoro.js')
+
 const debug = require('debug')('digitme')
 const net = require('net')
 const fs = require('fs')
@@ -30,7 +32,7 @@ exports.run = function (host, port, eport) {
   let sender = relay(`tcp://${host}:${port}`)
   sender.on('flush_history', () => {
     fs.readdir(TEMP_DIR, (err, files) => {
-      if (err) { return debug('Failed to open temp dir') }
+      if (err) return debug('Failed to open temp dir')
       for (let name of files) {
         name = path.resolve(TEMP_DIR, name)
         fs.readFile(name, 'utf8', (err, buff) => {
@@ -38,7 +40,7 @@ exports.run = function (host, port, eport) {
             sender.send(buff)
             debug('A local history is sync to remote')
             fs.unlink(name, err => {
-              if (err) { debug(`Error on deleting temp file ${name}`) }
+              if (err) debug(`Error on deleting temp file ${name}`)
             })
           }
         })
@@ -46,13 +48,45 @@ exports.run = function (host, port, eport) {
     })
   })
 
+  let clients = []
+  let clientIndex = 0
+
+  const tomato = new Pomodoro()
+  tomato.add({name: 'default'})
+  tomato.on('finish', () => {
+    // TODO: 2018-05-22
+    // Query for afterthought
+    debug('a timer is finished')
+    let msg = JSON.stringify(['ex', 'call digitme#tomatoFinish()'])
+    clients.forEach(socket => {
+      socket.write(msg)
+    })
+  })
+
+  tomato.on('change', () => {
+    let {state, tEnd} = tomato.getState()
+    let msg = JSON.stringify([
+      'ex',
+      `call digitme#tomatoStateSync(${state}, ${tEnd})`
+    ])
+    debug(`state change to ${state}`)
+    clients.forEach(socket => {
+      socket.write(msg)
+    })
+  })
+
   const editorListener = net.createServer(c => {
+    c.id = `socket${clientIndex}`
+    clientIndex++
+    clients.push(c)
     c.setEncoding('utf8')
+
     c.on('data', msg => {
-      if (!msg) { return }
-      let message
+      if (!msg) return
+      let index, message
       try {
         msg = JSON.parse(msg)
+        index = msg[0]
         message = msg[1]
       } catch (e) {
         debug('收到无效的编辑器消息, error: ' + e)
@@ -60,7 +94,12 @@ exports.run = function (host, port, eport) {
         return
       }
       let {event, ts, data} = message
-      editorListener.emit(event, ts, data)
+      editorListener.emit(event, ts, data, index, c)
+    })
+
+    c.on('close', () => {
+      debug('editor client closed')
+      clients = clients.filter(socket => socket.id !== c.id)
     })
   })
 
@@ -77,9 +116,8 @@ exports.run = function (host, port, eport) {
         let {filename, filetype} = current
         let s = Session.new(filename, filetype)
         Session.current = s
-      } else {
+      } else
         current.beat()
-      }
     } else {
       // this might happen when client is restarted
       let s = Session.new('', '')
@@ -111,9 +149,64 @@ exports.run = function (host, port, eport) {
   editorListener.on('bufLeave', (ts, data) => {
     let current = Session.current
 
-    if (!current) { return debug('Possible bug, no session when a bufleave') }
+    if (!current) return debug('Possible bug, no session when a bufleave')
     current.close(data)
     Session.stash(current)
+  })
+
+  editorListener.on('tomatoQuery', (ts, data, index, client) => {
+    debug('tomatoQuery')
+    client.write(JSON.stringify([index, tomato.getState()]))
+  })
+
+  editorListener.on('tomatoStart', (ts, data, index, client) => {
+    debug('tomatoStart')
+    debug(data)
+    let {name = 'default'} = data
+    let msg = [index, {ok: 0, err: ''}]
+    let err = tomato.start(name)
+    if (err) {
+      msg[1].ok = 1
+      msg[1].err = err
+    }
+    debug(err || 'timer started')
+    client.write(JSON.stringify(msg))
+  })
+
+  editorListener.on('tomatoPause', (ts, data, index, client) => {
+    debug('tomatoPause')
+    let msg = [index, {ok: 0, err: ''}]
+    let err = tomato.pause()
+    if (err) {
+      msg[1].ok = 1
+      msg[1].err = err
+    }
+    debug(err || 'timer paused')
+    client.write(JSON.stringify(msg))
+  })
+
+  editorListener.on('tomatoAbandon', (ts, data, index, client) => {
+    debug('tomatoAbandon')
+    let msg = [index, {ok: 0, err: ''}]
+    let err = tomato.abandon()
+    if (err) {
+      msg[1].ok = 1
+      msg[1].err = err
+    }
+    debug(err || 'timer abandoned')
+    client.write(JSON.stringify(msg))
+  })
+
+  editorListener.on('tomatoResume', (ts, data, index, client) => {
+    debug('tomatoResume')
+    let msg = [index, {ok: 0}]
+    let err = tomato.resume()
+    if (err) {
+      msg[1].ok = 1
+      msg[1].err = err
+    }
+    client.write(JSON.stringify(msg))
+    debug(err || 'timer resumed')
   })
 
   editorListener.listen(eport, () => {
@@ -130,7 +223,7 @@ exports.run = function (host, port, eport) {
     // gzip the history
     let history = Session.history
       .filter(e => e.validate())
-    if (history.length === 0) { return }
+    if (history.length === 0) return
     Session.history = []
 
     let msg = {event: 'digit_session', data: {ts: Date.now(), history}}
@@ -142,7 +235,7 @@ exports.run = function (host, port, eport) {
     } else {
       let fp = path.resolve(TEMP_DIR, `./${Date.now()}_tmp`)
       fs.writeFile(fp, msg, err => {
-        if (err) { return debug('Failed to save history locally: ' + err) }
+        if (err) return debug('Failed to save history locally: ' + err)
         debug('History is saved locally')
       })
     }
