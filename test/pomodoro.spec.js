@@ -122,6 +122,13 @@ describe('Pomodoro', function () {
       let diff = tEnd - tStart
       assert.equal(diff, 15 * 60000)
     })
+
+    it('should emit change event', function () {
+      let spy = sinon.spy(pomo, 'emit')
+      pomo.add({name: 'test'})
+      pomo.start('test')
+      assert(spy.calledWith('change'))
+    })
   })
 
   describe('pause 暂停时钟', function () {
@@ -174,6 +181,21 @@ describe('Pomodoro', function () {
       clock.tick(5 * 60000)
       assert(spy.called)
     })
+
+    it('should set the tResume property of current', function () {
+      pomo.start('test')
+      pomo.pause()
+      assert(pomo.current.hasOwnProperty('tResume'))
+      assert.equal(pomo.current.tResume - pomo.current.tPaused, 300000)
+    })
+
+    it('should emit change event', function () {
+      let spy = sinon.spy(pomo, 'emit')
+      pomo.start('test')
+      pomo.pause()
+      assert(spy.calledTwice)
+      assert(spy.calledWith('change'))
+    })
   })
 
   describe('resume 恢复时钟', function () {
@@ -214,6 +236,12 @@ describe('Pomodoro', function () {
       let diff = newEnd - tEnd
       assert.equal(diff, rest)
     })
+
+    it('should emit change event', function () {
+      let spy = sinon.spy(pomo, 'emit')
+      pomo.resume()
+      assert(spy.calledWith('change'))
+    })
   })
 
   describe('abandon 放弃时钟', function () {
@@ -237,11 +265,18 @@ describe('Pomodoro', function () {
     })
 
     it('should clear the current timeout', function () {
-      let spy = sinon.spy(pomo, 'finish')
-      let {tWork, tRest} = pomo.current.timer.parseTWR()
+      let spyfinish = sinon.spy(pomo, 'finish')
+      let spyresume = sinon.spy(pomo, 'resume')
       pomo.abandon()
-      clock.tick(tWork + tRest)
-      assert.equal(spy.called, false)
+      clock.next()
+      assert.equal(spyfinish.called, false)
+      assert.equal(spyresume.called, false)
+    })
+
+    it('should emit change event', function () {
+      let spy = sinon.spy(pomo, 'emit')
+      pomo.abandon()
+      assert(spy.calledWith('change'))
     })
   })
 
@@ -271,6 +306,12 @@ describe('Pomodoro', function () {
       clock.next() // actual work stops, and rest begin
       let timer = pomo.getTimer('test')
       assert.equal(timer.nFinish, 1)
+    })
+
+    it('should add the session to the history', function () {
+      clock.next()
+      let history = pomo.getRecentHistory()
+      assert.equal(history.name, 'test')
     })
   })
 })

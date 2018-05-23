@@ -1,8 +1,9 @@
-// const debug = require('debug')('digitme:pomodoro')
-
+const EventEmitter = require('events')
+const util = require('util')
 const TimerEnum = {
   'running': 0,
-  'paused': 1
+  'idle': 1,
+  'paused': 2
 }
 const Timer = function ({name, tWork, tRest}) {
   this.name = name
@@ -17,10 +18,14 @@ Timer.prototype.parseTWR = function () {
 }
 
 const Pomodoro = function () {
+  EventEmitter.call(this)
   this.timers = [] // [Timer, ...]
-  // {name, tid, state, tStart, tEnd, tPaused, hasPaused}
+  // {name, tid, state, tStart, tEnd, tPaused, tResume, hasPaused}
   this.current = null
+  // {name, tStart, tEnd}
+  this.history = []
 }
+util.inherits(Pomodoro, EventEmitter)
 
 Pomodoro.prototype.add = function (config) {
   let {name, tWork = 25, tRest = 5} = config
@@ -48,14 +53,19 @@ Pomodoro.prototype.start = function (name) {
   let tStart = Date.now()
   let tEnd = tStart + tWork
   this.current = {timer, tid, state: TimerEnum.running, tStart, tEnd}
+  this.emit('change')
   return null
 }
+
 Pomodoro.prototype._start = function (tWork, tRest) {
   let tid = setTimeout(() => {
     this.finish()
-    setTimeout(() => {
-      this.finishRest()
-    }, tRest)
+    // TODO: 2018-05-22
+    // when configured, repeat the timer after rest.
+    // the repeat time should be configured upfront.
+    // setTimeout(() => {
+    //   this.finishRest()
+    // }, tRest)
   }, tWork)
   return tid
 }
@@ -68,13 +78,16 @@ Pomodoro.prototype.pause = function () {
   if (this.current.hasPaused === true)
     return 'no second chance'
   this.current.state = TimerEnum.paused
-  this.current.tPaused = Date.now()
+  let now = Date.now()
+  this.current.tPaused = now
+  this.current.tResume = now + 300000
   clearTimeout(this.current.tid)
   let tid = setTimeout(() => {
     this.resume()
   }, 300000)
   this.current.tid = tid
   this.current.hasPaused = true
+  this.emit('change')
   return null
 }
 
@@ -91,6 +104,7 @@ Pomodoro.prototype.resume = function () {
   this.current.tEnd += Date.now() - tPaused
   this.current.state = TimerEnum.running
   this.current.tPaused = null
+  this.emit('change')
   return null
 }
 
@@ -101,6 +115,7 @@ Pomodoro.prototype.abandon = function () {
   clearTimeout(tid)
   timer.nAbandon++
   this.current = null
+  this.emit('change')
   return null
 }
 
@@ -109,12 +124,37 @@ Pomodoro.prototype.finish = function () {
     return `nothing to finish`
   let {timer} = this.current
   timer.nFinish++
+  let {tStart, tEnd, name} = timer
+  let history = {name, tStart, tEnd}
+  this.history.push(history)
+
   this.current = null
+  this.emit('finish')
   return null
 }
 
 Pomodoro.prototype.getTimer = function (name) {
   return this.timers.find(e => e.name === name)
+}
+
+Pomodoro.prototype.getState = function () {
+  let msg = {state: 0, tEnd: 0}
+  if (this.current) {
+    let {tResume, tEnd, state} = this.current
+    msg.state = state
+    if (state === TimerEnum.paused)
+      msg.tEnd = tResume
+    else
+      msg.tEnd = tEnd
+  } else
+    msg.state = TimerEnum.idle
+
+  return msg
+}
+
+Pomodoro.prototype.getRecentHistory = function () {
+  let len = this.history.length
+  return this.history[len - 1]
 }
 
 module.exports = {Pomodoro, Timer, TimerEnum}
