@@ -7,7 +7,7 @@ function validSession () {
   let filetype = 'js' + Session.index
   let session = Session.new(filename, filetype)
   // a valid session must tick
-  for (let i = 0; i < Session.index; i++) { session.beat() }
+  for (let i = 0; i < Session.index; i++) session.beat()
   return session
 }
 
@@ -97,7 +97,7 @@ describe('Session', function () {
     let props = ['start', 'end', 'lastTick', 'ticks', 'marked']
     props.forEach(function (prop) {
       it('should have ' + prop + ' property', function () {
-        for (const prop of props) { assert.equal(session.hasOwnProperty(prop), true) }
+        for (const prop of props) assert.equal(session.hasOwnProperty(prop), true)
       })
     })
   })
