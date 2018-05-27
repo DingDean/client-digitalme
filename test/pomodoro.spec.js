@@ -278,6 +278,14 @@ describe('Pomodoro', function () {
       pomo.abandon()
       assert(spy.calledWith('change'))
     })
+
+    it('should store a history with type 3', function () {
+      let spy = sinon.spy(pomo.history, 'push')
+      pomo.abandon()
+      assert(spy.called)
+      let history = pomo.history.pop()
+      assert.equal(history.type, TimerEnum.abandoned)
+    })
   })
 
   describe('finish 完成时钟', function () {
@@ -308,10 +316,13 @@ describe('Pomodoro', function () {
       assert.equal(timer.nFinish, 1)
     })
 
-    it('should add the session to the history', function () {
+    it('should store a history with type 4', function () {
+      let spy = sinon.spy(pomo.history, 'push')
       clock.next()
-      let history = pomo.getRecentHistory()
-      assert.equal(history.name, 'test')
+      assert(spyFinish.called)
+      assert(spy.called)
+      let history = pomo.history.pop()
+      assert.equal(history.type, TimerEnum.finished)
     })
   })
 

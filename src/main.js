@@ -223,10 +223,16 @@ exports.run = function (host, port, eport) {
     // gzip the history
     let history = Session.history
       .filter(e => e.validate())
-    if (history.length === 0) return
     Session.history = []
 
-    let msg = {event: 'digit_session', data: {ts: Date.now(), history}}
+    let tomatos = tomato.history
+    tomato.history = []
+    if (history.length === 0 && tomatos.length === 0) return
+
+    let msg = {
+      event: 'digit_session',
+      data: { ts: Date.now(), history, tomatos }
+    }
     msg = JSON.stringify(msg)
 
     if (sender.isAlive()) {
