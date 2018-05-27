@@ -3,7 +3,9 @@ const util = require('util')
 const TimerEnum = {
   'running': 0,
   'idle': 1,
-  'paused': 2
+  'paused': 2,
+  'finished': 3,
+  'abandoned': 4
 }
 const Timer = function ({name, tWork, tRest}) {
   this.name = name
@@ -22,7 +24,7 @@ const Pomodoro = function () {
   this.timers = [] // [Timer, ...]
   // {name, tid, state, tStart, tEnd, tPaused, tResume, hasPaused}
   this.current = null
-  // {name, tStart, tEnd}
+  // {tStart, tEnd, type}
   this.history = []
 }
 util.inherits(Pomodoro, EventEmitter)
@@ -111,10 +113,12 @@ Pomodoro.prototype.resume = function () {
 Pomodoro.prototype.abandon = function () {
   if (this.current === null)
     return `nothing to abandon`
-  let {timer, tid} = this.current
+  let {timer, tid, tStart} = this.current
   clearTimeout(tid)
   timer.nAbandon++
   this.current = null
+  let history = {tStart, tEnd: Date.now(), type: TimerEnum.abandoned}
+  this.history.push(history)
   this.emit('change')
   return null
 }
@@ -122,10 +126,9 @@ Pomodoro.prototype.abandon = function () {
 Pomodoro.prototype.finish = function () {
   if (this.current === null)
     return `nothing to finish`
-  let {timer} = this.current
+  let {tStart, tEnd, timer} = this.current
   timer.nFinish++
-  let {tStart, tEnd, name} = timer
-  let history = {name, tStart, tEnd}
+  let history = {type: TimerEnum.finished, tStart, tEnd}
   this.history.push(history)
 
   this.current = null
@@ -150,11 +153,6 @@ Pomodoro.prototype.getState = function () {
     msg.state = TimerEnum.idle
 
   return msg
-}
-
-Pomodoro.prototype.getRecentHistory = function () {
-  let len = this.history.length
-  return this.history[len - 1]
 }
 
 module.exports = {Pomodoro, Timer, TimerEnum}
