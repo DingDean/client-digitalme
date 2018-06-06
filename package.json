@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha -cw ./test",
-    "dev": "DEBUG=digitme* node index.js",
+    "dev": "DEBUG=dgmc* node index.js",
     "lint": "eslint ./index.js"
   },
   "bin": {

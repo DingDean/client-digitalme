@@ -1,6 +1,6 @@
 const sinon = require('sinon')
 const assert = require('assert')
-const Session = require('../src/session.js')
+const Session = require('../../src/session/session.js')
 
 function validSession () {
   let filename = 'valid' + Session.index
