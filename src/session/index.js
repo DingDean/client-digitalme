@@ -1,5 +1,6 @@
 const Session = require('./session.js')
 const debug = require('debug')('dgmc:session')
+const HALF_HOUR = 30 * 60000
 
 exports.bootstrap = function (server) {
   server.on('ping', (ts, data) => {
@@ -53,6 +54,13 @@ exports.bootstrap = function (server) {
     current.close(data)
     Session.stash(current)
   })
+
+  setInterval(() => {
+    let history = Session.history
+      .filter(e => e.validate())
+    Session.history = []
+    server.emit('save session', history)
+  }, HALF_HOUR)
 
   return server
 }
