@@ -1,5 +1,5 @@
 const debug = require('debug')('digitme:session')
-const Session = function (filename, filetype, index) {
+const Session = function (filename, filetype, index, project) {
   this.index = index
   this.filename = filename
   this.filetype = filetype
@@ -8,6 +8,7 @@ const Session = function (filename, filetype, index) {
   this.lastTick = Date.now()
   this.ticks = 0
   this.marked = false
+  this.project = project || 'na'
 }
 module.exports = Session
 

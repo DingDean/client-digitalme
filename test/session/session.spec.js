@@ -94,6 +94,10 @@ describe('Session', function () {
       assert.equal(session.filetype, testft)
     })
 
+    it('should have project property default with na', function () {
+      assert.equal(session.project, 'na')
+    })
+
     let props = ['start', 'end', 'lastTick', 'ticks', 'marked']
     props.forEach(function (prop) {
       it('should have ' + prop + ' property', function () {
