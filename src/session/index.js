@@ -1,5 +1,5 @@
 const Session = require('./session.js')
-const debug = require('debug')('dgmc:session')
+const debug = require('debug')('dgmc:sessionMgr')
 const HALF_HOUR = 30 * 60000
 
 exports.bootstrap = function (server) {
@@ -21,10 +21,12 @@ exports.bootstrap = function (server) {
       Session.current = s
       debug(`A marked session is created with index ${s.index}`)
     }
-    server.emit('ping')
+    debug('ping')
+    server.emit('pong')
   })
 
   server.on('bufEnter', (ts, data) => {
+    debug('bufEnter')
     let {filename = 'test', filetype = 'test'} = data
     let current = Session.current
     if (current) {
@@ -40,14 +42,7 @@ exports.bootstrap = function (server) {
   })
 
   server.on('bufLeave', (ts, data) => {
-    let current = Session.current
-
-    if (!current) return debug('Possible bug, no session when a bufleave')
-    current.close(data)
-    Session.stash(current)
-  })
-
-  server.on('bufLeave', (ts, data) => {
+    debug('bufLeave')
     let current = Session.current
 
     if (!current) return debug('Possible bug, no session when a bufleave')
@@ -59,8 +54,10 @@ exports.bootstrap = function (server) {
     let history = Session.history
       .filter(e => e.validate())
     Session.history = []
+    debug('session created')
+    debug(history)
     server.emit('save session', history)
-  }, HALF_HOUR)
+  }, 30000)
 
   return server
 }
