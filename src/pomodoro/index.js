@@ -21,6 +21,7 @@ function newMgr (server) {
     debug(`state change to ${state}`)
     server.emit('command', msg)
   })
+  return tomato
 }
 
 exports.bootstrap = function (server) {
