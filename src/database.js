@@ -2,7 +2,7 @@ const debug = require('debug')('dgmc:db')
 const grpc = require('grpc')
 const path = require('path')
 const PROTO = path.resolve(__dirname,
-  '../protos/database/database.proto')
+  '../protos/database.proto')
 const database = grpc.load(PROTO).database
 
 const os = require('os')
@@ -32,6 +32,7 @@ function connect (endpoint) {
     if (err)
       return debug('Failed to connect to remote database, fallback to local')
 
+    debug('Connected to remote database')
     flushHistory()
   })
 }
@@ -80,7 +81,7 @@ function onSaveSession (sessions) {
 }
 
 function copyWithoutFields (original, fields) {
-  let keysToCopy = Object.keys(original).filter(e => !fields.find(e))
+  let keysToCopy = Object.keys(original).filter(e => !fields.includes(e))
   let trimed = {}
   keysToCopy.forEach(key => {
     trimed[key] = original[key]
@@ -113,12 +114,16 @@ function saveRemote (sessions) {
     }
   }
   db.saveSession(sessions, (err, msg) => {
-    if (err)
+    if (err) {
+      debug('Failed to save remote')
       return debug(err)
-    let {statusCode, status} = msg
+    }
+    let {statusCode, errMsg} = msg
 
     if (statusCode !== 0)
-      debug(status)
+      debug(errMsg)
+    else
+      debug('History is sync to remote')
   })
 }
 
