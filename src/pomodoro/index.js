@@ -4,12 +4,13 @@ const debug = require('debug')('dgmc:pomodoro')
 function newMgr (server) {
   const tomato = new Pomodoro()
   tomato.add({name: 'default'})
-  tomato.on('finish', () => {
+  tomato.on('finish', (history) => {
     // TODO: 2018-05-22
     // Query for afterthought
     debug('a timer is finished')
     let msg = JSON.stringify(['ex', 'call digitme#tomatoFinish()'])
     server.emit('command', msg)
+    server.emit('save tomato', history)
   })
 
   tomato.on('change', () => {

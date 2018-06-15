@@ -126,13 +126,15 @@ Pomodoro.prototype.abandon = function () {
 Pomodoro.prototype.finish = function () {
   if (this.current === null)
     return `nothing to finish`
-  let {tStart, tEnd, timer} = this.current
+  let {tStart, timer} = this.current
   timer.nFinish++
-  let history = {type: TimerEnum.finished, tStart, tEnd}
-  this.history.push(history)
+  // TODO: 2018-06-15
+  // 不要写死minutes
+  // 填写感受
+  let history = {isComplete: true, start: tStart, minutes: 25, reflection: ''}
 
   this.current = null
-  this.emit('finish')
+  this.emit('finish', history)
   return null
 }
 

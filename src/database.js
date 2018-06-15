@@ -62,6 +62,7 @@ function flushHistory () {
 
 function bootstrap (server) {
   server.on('save session', onSaveSession)
+  server.on('save tomato', onSaveTomato)
 }
 
 function onSaveSession (sessions) {
@@ -125,6 +126,43 @@ function saveRemote (sessions) {
     else
       debug('History is sync to remote')
   })
+}
+
+function onSaveTomato (tomato) {
+  if (useLocal) {
+    let fp = path.resolve(TEMP_DIR, `./${Date.now()}_tomato`)
+
+    try {
+      let serial = JSON.stringify(tomato)
+      fs.writeFile(fp, serial, err => {
+        if (err) return debug('Failed to save tomato locally: ' + err)
+        debug('Tomato is saved locally')
+      })
+    } catch (e) {
+      debug('Failed to save Tomato locally: ' + e)
+      failedAttempts.push(tomato)
+    }
+  } else {
+    if ((typeof tomato) === 'string') {
+      try {
+        tomato = JSON.parse(tomato)
+      } catch (e) {
+        debug('failed to recover tomato' + e)
+      }
+    }
+    db.saveTomato(tomato, (err, msg) => {
+      if (err) {
+        debug('Tomato Failed to save remote')
+        return debug(err)
+      }
+      let {statusCode, errMsg} = msg
+
+      if (statusCode !== 0)
+        debug(errMsg)
+      else
+        debug('tomato is sync to remote')
+    })
+  }
 }
 
 exports.connect = connect
