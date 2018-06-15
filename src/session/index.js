@@ -1,12 +1,12 @@
 const Session = require('./session.js')
 const debug = require('debug')('dgmc:sessionMgr')
-const HALF_HOUR = 30 * 60000
+const TIMEOUT = 60000
 
 exports.bootstrap = function (server) {
   server.on('ping', (ts, data) => {
     let current = Session.current
     if (current) {
-      if (current.isExpired(ts)) {
+      if (current.isExpired(Date.now())) {
         current.close()
         Session.stash(current)
         let {filename, filetype} = current
@@ -57,7 +57,7 @@ exports.bootstrap = function (server) {
     debug('session created')
     debug(history)
     server.emit('save session', history)
-  }, 30000)
+  }, TIMEOUT)
 
   return server
 }
