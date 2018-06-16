@@ -58,14 +58,18 @@ program
 
     let {running} = await isRunning('dgmc')
 
-    if (running)
+    if (running) {
       console.log('client is running')
-    else {
+      return 0
+    } else {
       if (await portIsFree(eport)) {
         daemon(host, port, eport)
         console.log('client starts successfully')
-      } else
+        return 0
+      } else {
         console.log('port is busy')
+        return 1
+      }
     }
   })
 
