@@ -1,5 +1,5 @@
-const debug = require('debug')('digitme:session')
-const Session = function (filename, filetype, index) {
+const debug = require('debug')('dgmc:session')
+const Session = function (filename, filetype, index, project) {
   this.index = index
   this.filename = filename
   this.filetype = filetype
@@ -8,6 +8,7 @@ const Session = function (filename, filetype, index) {
   this.lastTick = Date.now()
   this.ticks = 0
   this.marked = false
+  this.project = project || 'na'
 }
 module.exports = Session
 
@@ -55,7 +56,10 @@ Session.prototype.close = function (info) {
     this.filename = info.filename
     this.filetype = info.filetype
   }
-  this.end = Date.now()
+  if (this.isExpired(Date.now()))
+    this.end = this.lastTick + Session.IDLE_TIMEOUT
+  else
+    this.end = Date.now()
 }
 
 Session.prototype.validate = function () {

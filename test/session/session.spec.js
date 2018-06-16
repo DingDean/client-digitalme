@@ -1,6 +1,6 @@
 const sinon = require('sinon')
 const assert = require('assert')
-const Session = require('../src/session.js')
+const Session = require('../../src/session/session.js')
 
 function validSession () {
   let filename = 'valid' + Session.index
@@ -92,6 +92,10 @@ describe('Session', function () {
 
     it('should have filetype property as given', function () {
       assert.equal(session.filetype, testft)
+    })
+
+    it('should have project property default with na', function () {
+      assert.equal(session.project, 'na')
     })
 
     let props = ['start', 'end', 'lastTick', 'ticks', 'marked']

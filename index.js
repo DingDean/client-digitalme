@@ -10,7 +10,7 @@ program
 let {host, port, eport} = program
 
 host = host || 'localhost'
-port = port || 8764
+port = port || 50051
 eport = eport || 8763
 
 main.run(host, port, eport)

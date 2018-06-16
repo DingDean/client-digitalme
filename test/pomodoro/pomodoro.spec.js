@@ -1,6 +1,6 @@
 const assert = require('assert')
 const sinon = require('sinon')
-const {Pomodoro, TimerEnum} = require('../src/pomodoro.js')
+const {Pomodoro, TimerEnum} = require('../../src/pomodoro/pomodoro.js')
 
 describe('Pomodoro', function () {
   describe('add 添加时钟配置', function () {
