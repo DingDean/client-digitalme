@@ -117,9 +117,11 @@ Pomodoro.prototype.abandon = function () {
   clearTimeout(tid)
   timer.nAbandon++
   this.current = null
-  let history = {tStart, tEnd: Date.now(), type: TimerEnum.abandoned}
-  this.history.push(history)
-  this.emit('change')
+
+  let minutes = Math.floor((Date.now() - tStart) / 60000)
+
+  let history = {isComplete: false, start: tStart, minutes, reflection: ''}
+  this.emit('finish', [history])
   return null
 }
 
@@ -134,7 +136,7 @@ Pomodoro.prototype.finish = function () {
   let history = {isComplete: true, start: tStart, minutes: 25, reflection: ''}
 
   this.current = null
-  this.emit('finish', history)
+  this.emit('finish', [history])
   return null
 }
 
