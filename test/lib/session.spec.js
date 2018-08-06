@@ -1,6 +1,6 @@
 const sinon = require('sinon')
 const assert = require('assert')
-const Session = require('../../src/session/session.js')
+const Session = require('../../src/lib/session.js')
 
 function validSession () {
   let filename = 'valid' + Session.index
@@ -10,19 +10,6 @@ function validSession () {
   for (let i = 0; i < Session.index; i++) session.beat()
   return session
 }
-
-// function inValidSession () {
-// let a = Session.new('', 'js', 1)
-// a.beat()
-// let b = Session.new('NERD_TREE', '', 1)
-// b.beat()
-// let c = Session.new('a', 'js', 1)
-// let d = Session.new('a', '', 1)
-// d.beat()
-
-// let invalids = [a, b, c, d]
-// return invalids[ Session.index % 4 ]
-// }
 
 describe('Session', function () {
   describe('static new()', function () {

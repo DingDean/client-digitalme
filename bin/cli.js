@@ -6,15 +6,115 @@ const path = require('path')
 const main = path.resolve(__dirname, '../index.js')
 const {spawn} = require('child_process')
 const process = require('process')
+const inquirer = require('inquirer')
+const axios = require('axios')
+const os = require('os')
+const fs = require('fs')
+const util = require('util')
+const open = util.promisify(fs.open)
+const writeFile = util.promisify(fs.writeFile)
+const readFile = util.promisify(fs.readFile)
+const close = util.promisify(fs.close)
 
-const daemon = function (host, port, eport) {
+const qa = [{
+  type: 'input',
+  name: 'host',
+  message: "What's your server host name",
+  default: 'http://localhost:8889',
+  async validate (host, inputs) {
+    try {
+      let res = await axios.get(host + '/hello')
+      return res.status === 200
+    } catch (e) {
+      return 'Please enter a valid server host.'
+    }
+  }
+}, {
+  type: 'input',
+  name: 'eport',
+  message: "What's port should your editors connect to",
+  default: 8763,
+  validate (eport, inputs) {
+    return !isNaN(eport)
+  }
+}, {
+  type: 'password',
+  name: 'apiToken',
+  message: "What's your api key",
+  mask: '*',
+  async validate (apiToken, inputs) {
+    try {
+      let res = await axios
+        .post(inputs.host + '/auth',
+          { apiToken })
+      return res.status === 200
+    } catch (e) {
+      return 'Please enter a valid api key'
+    }
+  }
+}]
+
+const CONFIG_FILE = path.resolve(os.homedir(), '.mineself.json')
+async function getConfig () {
+  try {
+    let fd = await open(CONFIG_FILE, 'r')
+    return readConfig(fd)
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      console.log('Config File Does Not Exists, Creating One Now...')
+      return setupConfig()
+    } else {
+      console.log(e)
+      process.abort()
+    }
+  }
+}
+
+async function readConfig (fd) {
+  try {
+    let conf = await readFile(fd, 'utf8')
+    await close(fd)
+    return JSON.parse(conf)
+  } catch (e) {
+    console.log(e)
+    process.abort()
+  }
+}
+
+async function setupConfig () {
+  try {
+    let input = await inquirer.prompt(qa)
+    await writeConfig(input)
+    console.log('Config is saved to ~/.mineself.json')
+    return input
+  } catch (e) {
+    console.log(e)
+    process.abort()
+  }
+}
+
+async function writeConfig ({host, eport, apiToken}) {
+  try {
+    let conf = JSON.stringify(
+      {host, eport, apiToken},
+      null,
+      2
+    )
+    return writeFile(CONFIG_FILE, conf)
+  } catch (e) {
+    console.log(e)
+    process.abort()
+  }
+}
+
+const daemon = function (host, eport, apiToken) {
   let cmd = 'nohup'
   let argv = [
     'node',
     main,
     `--host ${host}`,
-    `--port ${port}`,
     `--eport ${eport}`,
+    `--apiToken ${apiToken}`,
     '&>',
     '/dev/null',
     '&'
@@ -45,32 +145,36 @@ const portIsFree = async function (port) {
 
 program
   .command('start')
-  .option('--host <host>', 'remote server host, default: localhost')
-  .option('--port <port>', 'remote server port, default: 8764', parseInt)
-  .option('--eport <eport>',
-    'local editor channel port, default: 8763', parseInt)
-  .action(async options => {
-    let {host, port, eport} = program
+  .action(async () => {
+    let {host, eport, apiToken} = await getConfig()
+
+    if (!apiToken)
+      throw new Error('apiToken NOT FOUND')
 
     host = host || 'localhost'
-    port = port || 8764
     eport = eport || 8763
 
-    let {running} = await isRunning('dgmc')
-
-    if (running) {
-      console.log('client is running')
-      return 0
-    } else {
-      if (await portIsFree(eport)) {
-        daemon(host, port, eport)
-        console.log('client starts successfully')
-        return 0
-      } else {
-        console.log('port is busy')
+    Promise.all([
+      isRunning('dgmc'),
+      portIsFree(eport)
+    ])
+      .then(([{running}, isFree]) => {
+        if (running) {
+          console.log('dgmc is running')
+          return 1
+        } else if (!isFree) {
+          console.log(`${eport} is not free`)
+          return 1
+        } else {
+          daemon(host, eport, apiToken)
+          console.log('client starts successfully')
+          return 0
+        }
+      })
+      .catch(e => {
+        console.log(e)
         return 1
-      }
-    }
+      })
   })
 
 program
