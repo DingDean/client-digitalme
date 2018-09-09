@@ -3,14 +3,16 @@ const main = require('./src/main.js')
 
 program
   .option('--host <host>', 'remote server host')
-  .option('--port <port>', 'remote server port', parseInt)
   .option('--eport <eport>', 'local editor channel port', parseInt)
+  .option('--apiToken <apiToken>', 'your apiToken')
   .parse(process.argv)
 
-let {host, port, eport} = program
+let {host, eport, apiToken} = program
 
-host = host || 'localhost'
-port = port || 50051
+if (!apiToken)
+  throw new Error('apiToken NOT FOUND')
+
+host = host || 'localhost:8999'
 eport = eport || 8763
 
-main.run(host, port, eport)
+main.run(host, eport, apiToken)

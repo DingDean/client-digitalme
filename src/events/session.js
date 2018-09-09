@@ -1,4 +1,4 @@
-const Session = require('./session.js')
+const Session = require('../lib/session.js')
 const debug = require('debug')('dgmc:sessionMgr')
 const TIMEOUT = 60000
 

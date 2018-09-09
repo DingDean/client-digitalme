@@ -1,20 +1,21 @@
+const editor = require('./lib/editor')
+const service = require('./service')
 const debug = require('debug')('dgmc')
-const editor = require('./editor.js')
-const serviceConf = require('../configs/services.js')
 // use this title to locate this process
 process.title = 'dgmc'
 
-exports.run = function (host, port, eport) {
-  let modules = ['pomodoro', 'session']
-  modules.forEach(name => {
-    let m = require(`./${name}`)
-    m.bootstrap(editor)
-  })
+exports.run = async function (host, eport, apiToken) {
+  try {
+    await service.init(host, apiToken)
+  } catch (e) {
+    console.log(e)
+    process.abort()
+  }
 
-  serviceConf.forEach(({name, conf}) => {
-    let s = require(`./${name}`)
-    s.connect(conf.endpoint)
-    s.bootstrap(editor)
+  let modules = ['pomodoro', 'session', 'database']
+  modules.forEach(name => {
+    let m = require(`./events/${name}`)
+    m.bootstrap(editor)
   })
 
   editor.listen(eport, () => {

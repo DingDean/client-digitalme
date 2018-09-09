@@ -5,7 +5,7 @@
   "preferGlobal": true,
   "main": "index.js",
   "scripts": {
-    "test": "mocha --recursive -cw ./test",
+    "test": "mocha --require intelli-espower-loader --recursive -cw --check-leaks ./test",
     "dev": "DEBUG=dgmc* node index.js",
     "lint": "eslint ./index.js"
   },
@@ -16,13 +16,17 @@
   "author": "Ke Ding <me@dingkewz.com> [dingkewz.com]",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.18.0",
     "commander": "^2.15.1",
+    "config": "^2.0.1",
     "debug": "^3.1.0",
     "dotenv": "^5.0.1",
     "find-process": "^1.1.1",
     "grpc": "^1.12.2",
+    "inquirer": "^6.0.0",
     "mocha": "^5.1.1",
-    "sinon": "^5.0.3"
+    "sinon": "^5.0.3",
+    "superagent": "^3.8.3"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.3",
@@ -31,6 +35,9 @@
     "eslint-plugin-import": "^2.11.0",
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.7.0",
-    "eslint-plugin-standard": "^3.1.0"
+    "eslint-plugin-standard": "^3.1.0",
+    "intelli-espower-loader": "^1.0.1",
+    "nock": "^9.4.4",
+    "power-assert": "^1.6.0"
   }
 }

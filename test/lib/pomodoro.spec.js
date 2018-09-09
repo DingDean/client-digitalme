@@ -1,6 +1,6 @@
 const assert = require('assert')
 const sinon = require('sinon')
-const {Pomodoro, TimerEnum} = require('../../src/pomodoro/pomodoro.js')
+const {Pomodoro, TimerEnum} = require('../../src/lib/pomodoro.js')
 
 describe('Pomodoro', function () {
   describe('add 添加时钟配置', function () {
@@ -278,14 +278,6 @@ describe('Pomodoro', function () {
       pomo.abandon()
       assert(spy.calledWith('finish'))
     })
-
-    // it('should store a history with type 3', function () {
-    //   let spy = sinon.spy(pomo.history, 'push')
-    //   pomo.abandon()
-    //   assert(spy.called)
-    //   let history = pomo.history.pop()
-    //   assert.equal(history.type, TimerEnum.abandoned)
-    // })
   })
 
   describe('finish 完成时钟', function () {
@@ -315,15 +307,6 @@ describe('Pomodoro', function () {
       let timer = pomo.getTimer('test')
       assert.equal(timer.nFinish, 1)
     })
-
-    // it('should store a history with type 4', function () {
-    //   let spy = sinon.spy(pomo.history, 'push')
-    //   clock.next()
-    //   assert(spyFinish.called)
-    //   assert(spy.called)
-    //   let history = pomo.history.pop()
-    //   assert.equal(history.type, TimerEnum.finished)
-    // })
   })
 
   describe('getState', function () {

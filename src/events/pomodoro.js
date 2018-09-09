@@ -1,4 +1,4 @@
-const {Pomodoro} = require('./pomodoro.js')
+const {Pomodoro} = require('../lib/pomodoro.js')
 const debug = require('debug')('dgmc:pomodoro')
 
 function newMgr (server) {
@@ -24,6 +24,7 @@ function newMgr (server) {
   })
   return tomato
 }
+exports.newMgr = newMgr
 
 exports.bootstrap = function (server) {
   let tomato = newMgr(server)
