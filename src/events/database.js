@@ -7,8 +7,8 @@ database.bootstrap = function (server) {
   server.on('save tomato', onSaveTomato)
 }
 
-function copyWithoutFields (original, fields) {
-  let keysToCopy = Object.keys(original).filter(e => !fields.includes(e))
+function copyFields (original, fields) {
+  let keysToCopy = Object.keys(original).filter(e => fields.includes(e))
   let trimed = {}
   keysToCopy.forEach(key => {
     trimed[key] = original[key]
@@ -22,8 +22,8 @@ async function onSaveSession (sessions) {
     return
 
   let history = sessions.map(e => {
-    let fields = ['index', 'marked']
-    return copyWithoutFields(e, fields)
+    let fields = ['filename', 'filetype', 'start', 'end', 'ticks', 'project']
+    return copyFields(e, fields)
   })
 
   await svs.saveSession(history)
