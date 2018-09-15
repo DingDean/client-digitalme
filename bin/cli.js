@@ -16,6 +16,8 @@ const writeFile = util.promisify(fs.writeFile)
 const readFile = util.promisify(fs.readFile)
 const close = util.promisify(fs.close)
 
+const MARK = 'dgmcTest'
+
 const qa = [{
   type: 'input',
   name: 'host',
@@ -23,7 +25,7 @@ const qa = [{
   default: 'http://localhost:8889',
   async validate (host, inputs) {
     try {
-      let res = await axios.get(host + '/hello')
+      let res = await axios.get(host + '/auth')
       return res.status === 200
     } catch (e) {
       return 'Please enter a valid server host.'
@@ -108,16 +110,12 @@ async function writeConfig ({host, eport, apiToken}) {
 }
 
 const daemon = function (host, eport, apiToken) {
-  let cmd = 'nohup'
+  let cmd = 'node'
   let argv = [
-    'node',
     main,
-    `--host ${host}`,
-    `--eport ${eport}`,
-    `--apiToken ${apiToken}`,
-    '&>',
-    '/dev/null',
-    '&'
+    '--host', host,
+    '--eport', eport,
+    '--apiToken', apiToken
   ]
 
   let sp = spawn(cmd, argv, {
@@ -151,36 +149,35 @@ program
     if (!apiToken)
       throw new Error('apiToken NOT FOUND')
 
-    host = host || 'localhost'
+    host = host || 'localhost:8889'
     eport = eport || 8763
 
-    Promise.all([
-      isRunning('dgmc'),
-      portIsFree(eport)
-    ])
-      .then(([{running}, isFree]) => {
-        if (running) {
-          console.log('dgmc is running')
-          return 1
-        } else if (!isFree) {
-          console.log(`${eport} is not free`)
-          return 1
-        } else {
-          daemon(host, eport, apiToken)
-          console.log('client starts successfully')
-          return 0
-        }
-      })
-      .catch(e => {
-        console.log(e)
+    try {
+      let [{running}, isFree] = await Promise.all([
+        isRunning(MARK), portIsFree(eport)
+      ])
+
+      if (running) {
+        console.log(`${MARK} is running`)
         return 1
-      })
+      } else if (!isFree) {
+        console.log(`${eport} is not free`)
+        return 1
+      } else {
+        daemon(host, eport, apiToken)
+        console.log('client starts successfully')
+        return 0
+      }
+    } catch (e) {
+      console.log(e)
+      return 1
+    }
   })
 
 program
   .command('stop')
   .action(async () => {
-    let {running, list} = await isRunning('dgmc')
+    let {running, list} = await isRunning(MARK)
     if (running)
       process.kill(list[0].pid)
     else
@@ -190,7 +187,7 @@ program
 program
   .command('status')
   .action(async () => {
-    let {running, list} = await isRunning('dgmc')
+    let {running, list} = await isRunning(MARK)
     if (running)
       console.log(`Client is running with pid ${list[0].pid}`)
     else
@@ -200,7 +197,7 @@ program
 program
   .command('check')
   .action(async () => {
-    let {running} = await isRunning('dgmc')
+    let {running} = await isRunning(MARK)
     console.log(running ? 1 : 0)
   })
 
