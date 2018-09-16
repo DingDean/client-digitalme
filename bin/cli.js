@@ -16,7 +16,7 @@ const writeFile = util.promisify(fs.writeFile)
 const readFile = util.promisify(fs.readFile)
 const close = util.promisify(fs.close)
 
-const MARK = 'dgmcTest'
+const MARK = 'dgmc'
 
 const qa = [{
   type: 'input',

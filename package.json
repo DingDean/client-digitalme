@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --require intelli-espower-loader --recursive -cw --check-leaks ./test",
-    "dev": "DEBUG=dgmc* node index.js --host http://localhost:8889 --eport 8777 --apiToken 'test api token'",
+    "dev": "DEBUG=dgmc* node index.js --host http://localhost:8889 --eport 8763 --apiToken 'test api token'",
     "lint": "eslint ./index.js"
   },
   "bin": {
