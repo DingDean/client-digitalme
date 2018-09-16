@@ -57,11 +57,13 @@ async function refreshToken () {
 }
 
 setInterval(async () => {
-  let sessions = _sessionBuf.map(service.onSaveSession)
-  let tomatoes = _tomatoBuf.map(service.onSaveTomato)
+  let sessions = _sessionBuf.map(service.saveSession)
+  let tomatoes = _tomatoBuf.map(service.saveTomato)
 
   try {
     await Promise.all([...sessions, ...tomatoes])
+    _sessionBuf = []
+    _tomatoBuf = []
   } catch (e) {
     debug(e)
   }
